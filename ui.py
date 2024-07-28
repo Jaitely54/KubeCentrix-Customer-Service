@@ -1,3 +1,4 @@
+
 import streamlit as st
 from streamlit_chat import message
 import time
@@ -13,6 +14,7 @@ from bank_statement import (
 )
 from variables import api_key
 import openai
+from voice import text_to_speech, speech_to_text
 
 # Set the API key for OpenAI
 openai.api_key = api_key
@@ -20,7 +22,6 @@ openai.api_key = api_key
 def load_environment():
     if not openai.api_key:
         raise ValueError("No API key provided. Please set the API key in the variables.py file.")
-    
 
 # Call load_environment at the start
 load_environment()
@@ -84,6 +85,8 @@ if 'user_files' not in st.session_state:
     st.session_state.user_files = None
 if 'df' not in st.session_state:
     st.session_state.df = None
+if 'user_input' not in st.session_state:
+    st.session_state.user_input = ""
 
 # Function to handle different types of queries
 def handle_query(query, user_info, query_type, user_files):
@@ -206,20 +209,37 @@ else:
             st.markdown(f'<div class="chat-message {message_class}">{msg["content"]}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Input field and send button
-        user_input = st.text_input("Enter your query:")
-        if st.button("Send"):
-            if user_input and st.session_state.query_type:
-                st.session_state.messages.append({"content": user_input, "is_user": True})
-                with st.spinner("VirtualBOB is typing..."):
-                    bot_response = handle_query(user_input, st.session_state.user, st.session_state.query_type, st.session_state.user_files)
-                    st.session_state.messages.append({"content": bot_response, "is_user": False})
-                st.experimental_rerun()
-            elif not st.session_state.query_type:
-                st.warning("Please select a query type (General or Bank Statement) before sending a message.")
+        # Input field and buttons
+        col1, col2, col3 = st.columns([3, 1, 1])
+        with col1:
+            text_input = st.text_input("Enter your query:", key="text_input")
+        with col2:
+            if st.button("🎤", help="Click to use voice input"):
+                with st.spinner("Listening..."):
+                    voice_input = speech_to_text()
+                    if voice_input:
+                        st.session_state.user_input = voice_input
+                        st.experimental_rerun()
+        with col3:
+            if st.button("Send"):
+                st.session_state.user_input = text_input
+                if st.session_state.user_input and st.session_state.query_type:
+                    user_input = st.session_state.user_input
+                    st.session_state.messages.append({"content": user_input, "is_user": True})
+                    with st.spinner("VirtualBOB is typing..."):
+                        bot_response = handle_query(user_input, st.session_state.user, st.session_state.query_type, st.session_state.user_files)
+                        st.session_state.messages.append({"content": bot_response, "is_user": False})
+                    st.session_state.user_input = ""
+                    st.experimental_rerun()
+                elif not st.session_state.query_type:
+                    st.warning("Please select a query type (General or Bank Statement) before sending a message.")
+
+        # Text-to-Speech button
+        if st.button("🔊"):
+            text_to_speech(st.session_state.user_input)
 
     with profile_col:
-        st.subheader("User Profile")
+        st.subheader("Profile")
         st.write(f"Name: {st.session_state.user['name']}")
         st.write(f"User ID: {st.session_state.user['user_id']}")
         st.write(f"Credit Score: {st.session_state.user['credit_score']}")
