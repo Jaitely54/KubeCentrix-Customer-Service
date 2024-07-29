@@ -1,18 +1,18 @@
 
 import streamlit as st
-from streamlit_chat import message
-import time
-import json
-from utils import setup_directories, get_cwd
+# from streamlit_chat import message
+# import time
+# import json
+from utils.setup import setup_directories, get_cwd
 from rag import process_pdfs, create_vector_db, setup_rag_chain
 from bank_crm import BankCRM
 from user_authentication import UserAuth
-import bank_statement
+# import bank_statement
 from bank_statement import (
     load_csv, optimize_dataframe, query_openai, execute_pandas_code, generate_summary,
-    is_analysis_query, chat_response, update_chat_history
+    # is_analysis_query, chat_response, update_chat_history
 )
-from variables import api_key
+from Dynamic.variables import api_key
 import openai
 from voice import text_to_speech, speech_to_text
 

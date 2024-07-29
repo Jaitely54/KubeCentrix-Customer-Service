@@ -1,0 +1,13 @@
+pyttsx3
+pyaudio
+SpeechRecognition
+pandas
+numpy
+openai
+tabulate
+sqlite3
+logging
+PyPDF2
+langchain
+langchain-community
+chromadb

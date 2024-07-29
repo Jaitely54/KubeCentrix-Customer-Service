@@ -6,11 +6,11 @@ import io
 import sys
 import logging
 from functools import lru_cache
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import json
 from tabulate import tabulate
-from variables import *
-from utils import *
+from Dynamic.variables import *
+from utils.setup import get_cwd
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -21,7 +21,7 @@ def setup_logging():
 
 def load_environment():
     # load_dotenv()
-    openai.api_key = 'sk-None-X2ezA4VAr2wd7eV7KpQlT3BlbkFJyd91L3bQE62CyvKs6YgX'
+    openai.api_key = api_key
 
 # Module: Data Loading and Optimization
 @lru_cache(maxsize=32)

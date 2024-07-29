@@ -1,0 +1,273 @@
+/* Style for titles and headers */
+.stTitle, .stSubheader, h1, h2, h3, h4, h5, h6 {
+    color: #FF6600 !important;
+}
+
+.stTitle {
+    font-weight: bold;
+    font-size: 2rem;
+}
+
+.stSubheader {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+body {
+    color: #000000;
+    background-color: #ffffff;
+    font-family: 'Arial', sans-serif;
+}
+
+.stApp {
+    background-color: #FFFFFF;
+}
+
+/* Button styles */
+.stButton > button {
+    background-color: #FF6600;
+    color: #FFFFFF !important;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+}
+
+.stButton > button:hover,
+.stButton > button:active {
+    background-color: #E65C00;
+    color: #FFFFFF !important;
+}
+
+/* Tab styles */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    color: #FF6600;
+    background-color: transparent;
+    border-radius: 4px 4px 0 0;
+    border: none;
+    padding: 10px 16px;
+    font-weight: 600;
+}
+
+.stTabs [aria-selected="true"] {
+    color: #FF6600;
+    background-color: transparent;
+    border-bottom: 2px solid #FF6600;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    color: #E65C00;
+    background-color: rgba(255, 102, 0, 0.1);
+}
+
+.stTabs [data-baseweb="tab-list"] button:focus {
+    box-shadow: none;
+}
+
+/* Ensure all text is black by default */
+p, span, label, .stTextInput > div > div > input::placeholder {
+    color: #000000;
+}
+
+/* Chat container styles */
+#chat-container {
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+/* Chat message styles */
+.css-1d391kg {
+    background-color: #FFF1E6;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* Ensure sidebar has white background */
+.css-1cypcdb {
+    background-color: #FFFFFF;
+}
+
+/* Toggle button styles */
+.stCheckbox {
+    margin-bottom: 20px;
+}
+
+.stCheckbox > label {
+    display: flex !important;
+    align-items: center;
+    cursor: pointer;
+}
+
+.stCheckbox > label > div[role="checkbox"] {
+    width: 48px !important;
+    height: 24px !important;
+    border-radius: 12px !important;
+    background-color: #FFFFFF !important;
+    transition: all 0.3s ease-in-out;
+    margin-right: 10px;
+}
+
+.stCheckbox > label > div[role="checkbox"]::before {
+    content: "";
+    position: absolute;
+    border: 1px solid rgb(0, 0, 0);
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgb(252, 252, 252);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Checked state */
+.stCheckbox > label > div[aria-checked="true"] {
+    background-color: #FF6600 !important;
+}
+
+.stCheckbox > label > div[aria-checked="true"]::before {
+    transform: translateX(24px);
+}
+
+/* Hide default Streamlit checkbox */
+.stCheckbox input {
+    display: none;
+}
+
+/* Style for the label text */
+.stCheckbox > label > div:last-child {
+    color: #000000;
+}
+
+/* Input container styles */
+.input-container {
+    display: flex;
+    align-items: center;
+    background-color: #FFFFFF;
+    border-radius: 22px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 80%;
+    max-width: 800px;
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+.input-container input {
+    flex-grow: 1;
+    border: none;
+    background-color: transparent;
+    color: #333;
+    font-size: 16px;
+    padding: 10px 10px;
+    outline: none;
+}
+
+.input-container input::placeholder {
+    color: #b4b4b4;
+}
+
+.input-container .send-button {
+    background-color: #FF6600;
+    border: 2px solid #FF6600;
+    color: #FFFFFF;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 12px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.input-container .send-button:hover {
+    background-color: #ff8533;
+    border-color: #ff8533;
+}
+
+/* Profile styles */
+.profile-header {
+    color: #FF6600;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.profile-subheader {
+    color: #FF6600;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.profile-info {
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.profile-info p {
+    margin: 3px 0;
+    color: #333;
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.profile-info strong {
+    color: #000;
+    font-weight: bold;
+}
+
+/* Layout adjustments */
+.main .block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 5rem !important;
+    max-width: 100% !important;
+}
+
+.stApp > header {
+    background-color: transparent;
+    padding-top: 0;
+}
+
+[data-testid="column"] {
+    padding: 0 !important;
+}
+
+/* Footer styles */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: white;
+    color: black;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    border-top: 1px solid #FF6600;
+    z-index: 1001;
+}
+
+/* Ensure the chat container doesn't overlap with the input box */
+[data-testid="column"]:first-child {
+    padding-bottom: 100px !important;
+}
+
+/* Hide Streamlit's default elements */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}

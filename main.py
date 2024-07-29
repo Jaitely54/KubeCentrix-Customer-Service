@@ -1,4 +1,4 @@
-from utils import setup_directories, get_cwd
+from utils.setup import setup_directories
 from rag import process_pdfs, create_vector_db, setup_rag_chain
 from bank_crm import BankCRM
 from user_authentication import UserAuth
