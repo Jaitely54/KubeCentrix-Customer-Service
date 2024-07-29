@@ -1,17 +1,17 @@
-import openai
-import os
-import pandas as pd
-import numpy as np
 import io
 import sys
-import logging
-from functools import lru_cache
-# from dotenv import load_dotenv
 import json
-from tabulate import tabulate
-from Dynamic.variables import *
-from utils.setup import get_cwd
+import openai
+import logging
 import warnings
+import pandas as pd
+from tabulate import tabulate
+from utils.setup import get_cwd
+from functools import lru_cache
+from Dynamic.variables import api_key
+# import os
+# import numpy as np
+# from dotenv import load_dotenv
 
 warnings.filterwarnings("ignore")
 

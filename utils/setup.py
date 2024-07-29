@@ -3,10 +3,11 @@ from pathlib import Path
 
 def setup_directories():
     cwd = os.getcwd()
+    output_path = f"{cwd}/output_dir"
     pdf_dir = os.path.join(cwd, 'Docs')
-    output_dir = os.path.join(cwd, 'extracted_text')
+    output_dir = os.path.join(output_path, 'extracted_text')
     os.makedirs(output_dir, exist_ok=True)
-    embedding_file_path = os.path.join(cwd, 'embeddings')
+    embedding_file_path = os.path.join(output_path, 'embeddings')
     
     return pdf_dir, output_dir, embedding_file_path
 
