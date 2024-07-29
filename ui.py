@@ -6,7 +6,7 @@ import streamlit as st
 from utils.setup import setup_directories, get_cwd
 from rag import process_pdfs, create_vector_db, setup_rag_chain
 from bank_crm import BankCRM
-from user_authentication import UserAuth
+from utils.user_authentication import UserAuth
 # import bank_statement
 from bank_statement import (
     load_csv, optimize_dataframe, query_openai, execute_pandas_code, generate_summary,
@@ -14,7 +14,7 @@ from bank_statement import (
 )
 from Dynamic.variables import api_key
 import openai
-from voice import text_to_speech, speech_to_text
+from utils.voice import text_to_speech, speech_to_text
 
 # Set the API key for OpenAI
 openai.api_key = api_key
