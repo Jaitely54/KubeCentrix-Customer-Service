@@ -1,9 +1,9 @@
 from utils.setup import setup_directories
+from utils.user_authentication import UserAuth
 from rag import process_pdfs, create_vector_db, setup_rag_chain
 from bank_crm import BankCRM
-from user_authentication import UserAuth
 from bank_statement import *
-
+from utils.user_authentication import UserAuth
 def create_new_user(auth, crm):
     print("\n--- Creating New User ---")
     user_id = input("Enter a new user ID: ")
