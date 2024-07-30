@@ -1,0 +1,52 @@
+.main {
+    background-color: white;
+}
+.header {
+    text-align: center;
+}
+.logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 150px;
+}
+.disclaimer {
+    color: black;
+    font-size: 16px;
+    margin: 20px 0;
+    text-align: left;
+}
+.disclaimer span {
+    color: #FF4B4B;
+    font-weight: bold;
+}
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    margin: 20px 0;
+}
+.checkbox-container input {
+    margin-right: 10px;
+}
+.checkbox-text {
+    color: black;
+}
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.custom-button {
+    width: 100%;
+    background-color: #f0f2f6;
+    color: black;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.custom-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
