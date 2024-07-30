@@ -15,8 +15,8 @@ This project aims to revolutionize customer service by using generative AI to de
 
 1. **Clone the Repository:**
     ```bash
-    git clone https://github.com/your-username/customer-service-enhancement.git
-    cd customer-service-enhancement
+    git clone https://github.com/Jaitely54/KubeCentrix-Customer-Service.git
+    cd KubeCentrix-Customer-Service
     ```
 
 2. **Create and Activate a Virtual Environment:**
@@ -88,32 +88,10 @@ The project is organized into the following modules:
 - **API Keys:** Ensure you have set up the API keys for OpenAI and other services in the `Dynamic/variables.py` file.
 - **File Paths:** Update paths for PDFs and embeddings in the `main.py` as needed.
 
-## Contributing
-
-1. **Fork the Repository:**
-    ```bash
-    git fork https://github.com/your-username/customer-service-enhancement.git
-    ```
-
-2. **Create a Branch:**
-    ```bash
-    git checkout -b feature/your-feature
-    ```
-
-3. **Make Changes and Commit:**
-    ```bash
-    git add .
-    git commit -m "Add feature"
-    ```
-
-4. **Push and Create a Pull Request:**
-    ```bash
-    git push origin feature/your-feature
-    ```
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## Acknowledgements
 
