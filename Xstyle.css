@@ -173,7 +173,6 @@ p, span, label, .stTextInput > div > div > input::placeholder {
     color: #000000;
 }
 
-/* Input container styles */
 .input-container {
     display: flex;
     align-items: center;
@@ -182,7 +181,7 @@ p, span, label, .stTextInput > div > div > input::placeholder {
     padding: 8px 16px;
     margin-top: 20px;  /* Adjusted to move the input box up */
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    width: 80%;
+    width: 10%;
     max-width: 800px;
 }
 
@@ -219,6 +218,7 @@ p, span, label, .stTextInput > div > div > input::placeholder {
     background-color: #ff8533;
     border-color: #ff8533;
 }
+
 
 /* Profile styles */
 .profile-header {

@@ -246,7 +246,8 @@ def show_chat_ui():
 
         # Buttons row
         with st.container():
-            col1, col2, col3, col4, col5 = st.columns([0.7, 0.7, 0.7, 0.7, 2.2])
+            col1, col2, col3, col4, col5 = st.columns(
+                [0.7, 0.7, 0.7, 0.7, 2.2])
             with col1:
                 st.toggle("Temp", key="temp_chat")
             with col2:
@@ -265,58 +266,29 @@ def show_chat_ui():
                     st.session_state.disclaimer_accepted = False
                     st.experimental_rerun()
 
-        # Chat display area
-        chat_container = st.container()
-        with chat_container:
-            for i, msg in enumerate(st.session_state.messages):
-                message(msg['content'], is_user=msg['is_user'], key=f"msg_{i}")
+        # Display previous chat messages
+        for msg in st.session_state.messages:
+            message(msg["content"], is_user=msg["is_user"])
+        st.markdown(
+            "<style>.stTextInput>div>div>input { width: calc(100% - 80px) !important; }</style>", unsafe_allow_html=True)
 
-        # Input field and send button
-        st.markdown("""
-            <div class="input-container">
-                <input type="text" placeholder="Ask me anything about bob services..." id="user-input">
-                <button class="send-button">➤</button>
-            </div>
-        """, unsafe_allow_html=True)
 
-        # JavaScript to handle input and button click
-        st.markdown("""
-        <script>
-            const input = document.getElementById('user-input');
-            const button = document.querySelector('.send-button');
-            
-            input.addEventListener('input', function() {
-                window.parent.postMessage({type: 'streamlit:setComponentValue', value: this.value}, '*');
-            });
-            
-            button.addEventListener('click', function() {
-                window.parent.postMessage({type: 'streamlit:setComponentValue', value: input.value}, '*');
-                setTimeout(() => {
-                    window.parent.postMessage({type: 'streamlit:componentReady', value: true}, '*');
-                }, 100);
-            });
-        </script>
-        """, unsafe_allow_html=True)
-
-        # Check if there's input to process
-        if st.session_state.get('user_input'):
-            user_input = st.session_state.user_input
-            # Add user message to chat
+    user_input = st.text_input("Ask me anything about bob services...",
+                            value=st.session_state.get('user_input', ''))
+    if st.button("Send", key="send_button"):
+        st.session_state.user_input = user_input
+        st.session_state.messages.append({"content": user_input, "is_user": True})
+        # Simulate bot response
+        with st.spinner("VirtualBOB is typing..."):
+            bot_response = handle_query(user_input, st.session_state.user,
+                                        st.session_state.query_type, st.session_state.user_files)
             st.session_state.messages.append(
-                {"content": user_input, "is_user": True})
+                {"content": bot_response, "is_user": False})
+        st.experimental_rerun()
 
-            # Simulate bot response
-            with st.spinner("VirtualBOB is typing..."):
-                time.sleep(1)  # Simulate processing time
-                bot_response = handle_query(
-                    user_input, st.session_state.user, st.session_state.query_type, st.session_state.user_files)
-                st.session_state.messages.append(
-                    {"content": bot_response, "is_user": False})
-
-            # Clear the input for the next interaction
-            st.session_state.user_input = ''
-            st.experimental_rerun()
-
+               # Function to show profile information and bank details
+def show_profile_info():
+    profile_col = st.columns([3, 1])[1]
     with profile_col:
         st.markdown("<h3 class='profile-header'>User Profile</h3>", unsafe_allow_html=True)
 
@@ -344,19 +316,20 @@ def show_chat_ui():
         else:
             st.error("User data is not available.")
 
-
-# Main logic to show either login page, disclaimer or chat UI
-if not st.session_state.user:
-    login_tab, register_tab = st.tabs(["Login", "Register"])
+# Main code block
+if st.session_state.user:
+     # Show user profile and bank details
+    if st.session_state.disclaimer_accepted:
+        show_chat_ui()
+        show_profile_info() 
+    else:
+        show_disclaimer()
+else:
+    login_tab, registration_tab = st.tabs(["Login", "Register"])
     with login_tab:
         login_form()
-    with register_tab:
+    with registration_tab:
         registration_form()
-else:
-    if not st.session_state.disclaimer_accepted:
-        show_disclaimer()
-    else:
-        show_chat_ui()
 
 # Footer
 footer = """

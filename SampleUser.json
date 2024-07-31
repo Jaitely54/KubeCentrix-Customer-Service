@@ -1,0 +1,23 @@
+[
+    {
+        "user_id": "a4b3190b-0789-4e78-8153-593cd2037448",
+        "name": "Rakesh Mohan lal",
+        "email": "Jennifer@example.net",
+        "phone_number": "3326019403",
+        "address": {
+            "street": "5762 Stephen Mission Apt. 925",
+            "city": "Port Laura",
+            "state": "Kentucky",
+            "zip_code": "93539",
+            "country": "Mexico"
+        },
+        "bank_details": {
+            "account_number": "BOBM62499248791297",
+            "bank_name": "Bank of Baroda",
+            "branch_code": "GANAHM",
+            "ifsc_code": "BARB0GANAHM",
+            "account_type": "Savings",
+            "balance": 24452.64
+        }
+    }
+]
