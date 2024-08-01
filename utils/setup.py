@@ -7,7 +7,8 @@ def setup_directories():
     pdf_dir = os.path.join(cwd, 'Docs')
     output_dir = os.path.join(output_path, 'extracted_text')
     os.makedirs(output_dir, exist_ok=True)
-    embedding_file_path = os.path.join(output_path, 'embeddings')
+    embedding_file_path = os.path.join(os.path.expanduser("~"), "Documents", "embeddings")
+
     
     return pdf_dir, output_dir, embedding_file_path
 
