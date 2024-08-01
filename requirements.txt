@@ -11,3 +11,5 @@ langchain
 langchain-community
 chromadb
 streamlit
+tiktoken
+faiss-cpu

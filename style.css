@@ -27,17 +27,24 @@ body {
 /* Button styles */
 .stButton > button {
     background-color: #FF6600;
-    color: #FFFFFF !important;
+    color: #FFFFFF !important;  /* Ensure white text on buttons */
     border: none;
     border-radius: 4px;
-    padding: 0.5rem 1rem;
+    padding: 0.3rem 0.6rem;
     font-weight: bold;
+    font-size: 0.8rem;
+    margin-right: 5px;
 }
 
 .stButton > button:hover,
 .stButton > button:active {
     background-color: #E65C00;
     color: #FFFFFF !important;
+}
+
+/* Add this new style for the button container */
+[data-testid="column"] > [data-testid="stHorizontalBlock"] {
+    gap: 0.5rem !important;
 }
 
 /* Tab styles */
@@ -115,7 +122,8 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 
 /* Toggle button styles */
 .stCheckbox {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    margin-right: 10px;
 }
 
 .stCheckbox > label {
@@ -125,12 +133,12 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 }
 
 .stCheckbox > label > div[role="checkbox"] {
-    width: 48px !important;
-    height: 24px !important;
-    border-radius: 12px !important;
+    width: 36px !important;
+    height: 18px !important;
+    border-radius: 9px !important;
     background-color: #FFFFFF !important;
     transition: all 0.3s ease-in-out;
-    margin-right: 10px;
+    margin-right: 5px;
 }
 
 .stCheckbox > label > div[role="checkbox"]::before {
@@ -139,8 +147,8 @@ p, span, label, .stTextInput > div > div > input::placeholder {
     border: 1px solid rgb(0, 0, 0);
     top: 2px;
     left: 2px;
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background-color: rgb(252, 252, 252);
     transition: all 0.3s ease-in-out;
@@ -152,7 +160,7 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 }
 
 .stCheckbox > label > div[aria-checked="true"]::before {
-    transform: translateX(24px);
+    transform: translateX(18px);
 }
 
 /* Hide default Streamlit checkbox */
@@ -165,18 +173,15 @@ p, span, label, .stTextInput > div > div > input::placeholder {
     color: #000000;
 }
 
-/* Input container styles */
-
-/* Input container styles */
 .input-container {
     display: flex;
     align-items: center;
     background-color: #FFFFFF;
     border-radius: 22px;
     padding: 8px 16px;
-    margin-top: 280px ; /* Adjust the margin as needed */
+    margin-top: 20px;  /* Adjusted to move the input box up */
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    width: 80%;
+    width: 10%;
     max-width: 800px;
 }
 
@@ -259,4 +264,55 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 /* Ensure the profile column doesn't cause scrolling */
 [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
     gap: 0rem !important;
+}
+
+/* Info message styles */
+.stAlert {
+    background-color: #FFF1E6;
+    color: #FF6600;
+    border-color: #FF6600;
+    margin-bottom: 20px;
+}
+
+.setting-header {
+    color: #FF6600;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.setting-info {
+    background-color: #f0f8ff; /* Light blue background */
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #FF6600; /* Orange border */
+}
+
+.setting-info label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.setting-info div {
+    display: flex;
+    align-items: center;
+}
+
+.input-button-container {
+    display: flex;
+    gap: 10px; /* Adjust the gap between input and buttons */
+    align-items: center;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px; /* Adjust the gap as needed */
+    align-items: center;
+}
+
+.stButton > button {
+    margin-right: 0.5rem; /* Adjust the margin between buttons */
 }
