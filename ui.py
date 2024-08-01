@@ -1,6 +1,6 @@
 
 # MARK: Importing Libraries
-
+import os
 import json
 import openai
 import numpy as np
@@ -14,6 +14,10 @@ from translate import translate_text, detect_language
 from rag import process_pdfs, create_vector_db, query_azure_openai, get_embedding
 from bank_statement import load_csv, optimize_dataframe, query_openai, execute_pandas_code, generate_summary
 
+
+pwd = os.getcwd()
+
+logo =f"{pwd}/Images/logo-no-background.svg"
 # Set up OpenAI API key
 openai.api_key = api_key
 
@@ -160,7 +164,7 @@ def handle_query(query, user_info, query_type, user_files):
 
 def login_form():
 
-    st.image("logo-no-background.svg", width=100)
+    st.image(logo, width=100)
     st.markdown("""
         <div class="header">
             <h1>VirtualBOB: Your Banking Assistant</h1>
@@ -188,7 +192,7 @@ def login_form():
 def registration_form():
     st.markdown("""
         <div class="header">
-            <img src="logo-no-background.svg" width="150">
+            <img src="Images/logo-no-background.svg" width="150">
             <h1>VirtualBOB: Your Banking Assistant</h1>
         </div>
     """, unsafe_allow_html=True)
@@ -261,7 +265,7 @@ def show_disclaimer():
         </style>
     """, unsafe_allow_html=True)
 
-    st.image("logo-no-background.svg", width=500)
+    st.image(logo, width=500)
 
     # Add disclaimer text
     st.markdown("""
@@ -305,7 +309,7 @@ def show_chat_ui():
     with header_col1:
         full_name = user_data['name']
         first_name = full_name.split()[0]
-        st.image("logo-no-background.svg", width=150)
+        st.image(logo, width=150)
         st.subheader(f"Welcome {first_name}")
         
     with header_col2:
