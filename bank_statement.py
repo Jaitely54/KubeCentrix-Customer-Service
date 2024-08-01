@@ -23,7 +23,10 @@ def load_environment():
     # load_dotenv()
     openai.api_key = api_key
 
-# Module: Data Loading and Optimization
+openai.api_key=api_key
+
+
+# Module: Data Loading and Optimizaxtion
 @lru_cache(maxsize=32)
 def load_csv(file_path):
     try:
