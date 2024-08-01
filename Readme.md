@@ -81,12 +81,6 @@ The project is organized into the following modules:
 
 This project is licensed under the MIT License.
 
-## Acknowledgements
-
-- **LangChain:** For text splitting and vector store creation.
-- **HuggingFace:** For embeddings.
-- **Chroma:** For vector database management.
-- **PyPDF2:** For PDF text extraction.
 
 
 
