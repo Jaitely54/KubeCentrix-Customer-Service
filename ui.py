@@ -14,37 +14,10 @@ from Dynamic.variables import api_key
 import faiss
 from translate import translate_text, detect_language
 import openai
-import speech_recognition as sr
-from gtts import gTTS
-import io
-from pydub import AudioSegment
-from pydub.playback import play
+from voice import text_to_speech, speech_to_text
 
 # Set up OpenAI API key
 openai.api_key = api_key
-
-# Initialize speech recognition
-recognizer = sr.Recognizer()
-
-def speech_to_text():
-    with sr.Microphone() as source:
-        st.write("Listening...")
-        audio = recognizer.listen(source)
-        try:
-            text = recognizer.recognize_google(audio)
-            return text
-        except sr.UnknownValueError:
-            return "Sorry, I couldn't understand that."
-        except sr.RequestError:
-            return "Sorry, there was an error with the speech recognition service."
-
-def text_to_speech(text, lang='en'):
-    tts = gTTS(text=text, lang=lang)
-    fp = io.BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    audio = AudioSegment.from_file(fp, format="mp3")
-    play(audio)
 
 def load_environment():
     if not openai.api_key:
@@ -303,7 +276,7 @@ def show_chat_ui():
             message(message_text, is_user=is_user, key=str(i))
             if not is_user:
                 if st.button(f"🔊 Listen", key=f"listen_{i}"):
-                    text_to_speech(message_text, lang=st.session_state.preferred_lang)
+                    text_to_speech(message_text)
 
         st.subheader("Ask a question:")
         user_input = st.text_input("Your question:", key="user_input_field")
@@ -312,8 +285,11 @@ def show_chat_ui():
         with col1:
             if st.button("🎙️ Speak your question"):
                 user_input = speech_to_text()
-                st.session_state.user_input = user_input
-                st.experimental_rerun()
+                if user_input:
+                    st.session_state.user_input = user_input
+                    st.experimental_rerun()
+                else:
+                    st.error("Sorry, I couldn't understand that. Please try again.")
         with col2:
             if st.button("Submit"):
                 if user_input and user_input.strip():
