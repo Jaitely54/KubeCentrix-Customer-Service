@@ -11,25 +11,6 @@ This project aims to revolutionize customer service by using generative AI to de
 - **Integration with Existing Platforms:** Seamlessly integrates with current customer service platforms.
 - **Enhanced Security and Privacy:** Adheres to the highest standards of data security and privacy.
 
-## Installation
-
-1. **Clone the Repository:**
-    ```bash
-    git clone https://github.com/Jaitely54/KubeCentrix-Customer-Service.git
-    cd KubeCentrix-Customer-Service
-    ```
-
-2. **Create and Activate a Virtual Environment:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
-
-3. **Install Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
 ## Project Structure
 
 The project is organized into the following modules:
@@ -70,6 +51,25 @@ The project is organized into the following modules:
 ### `utils/user_authentication.py`
 
 - **User Authentication:** Manages user login and account creation processes.
+
+## Installation
+
+1. **Clone the Repository:**
+    ```bash
+    git clone https://github.com/Jaitely54/KubeCentrix-Customer-Service.git
+    cd KubeCentrix-Customer-Service
+    ```
+
+2. **Create and Activate a Virtual Environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
+
+3. **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ## Configuration
 
