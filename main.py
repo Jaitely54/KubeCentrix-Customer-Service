@@ -9,6 +9,8 @@ from bank_statement import *
 import faiss
 import logging
 
+
+
 def create_new_user(auth, crm):
     print("\n--- Creating New User ---")
     user_id = input("Enter a new user ID: ")
