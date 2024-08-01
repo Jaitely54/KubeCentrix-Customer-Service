@@ -46,18 +46,6 @@ The project is organized into the following modules:
 
 ![image](https://github.com/Jaitely54/KubeCentrix-Customer-Service/assets/136069402/50f1a52e-eec2-4147-984c-4905b8898dcd)
 
-## Usage
-
-1. **Start the Application:**
-    ```bash
-    python main.py
-    ```
-
-2. **Follow the On-Screen Prompts:**
-    - **Login:** Enter your user ID and password to access your account.
-    - **Create New User:** Create a new user by providing required details.
-    - **Handle User Session:** Interact with the system to make queries or manage files.
-
 ## Functionality
 
 ### `rag.py`
