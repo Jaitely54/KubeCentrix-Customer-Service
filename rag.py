@@ -2,25 +2,49 @@ import logging
 import PyPDF2
 import os
 from pathlib import Path
+import requests
+import tiktoken
+import faiss
+import numpy as np
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-from langchain_community.chat_models import ChatOllama
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
-from langchain.prompts import ChatPromptTemplate
-from chromadb.config import Settings
-import chromadb
+
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Azure OpenAI credentials
+API_KEY = "84a8931a7b2b42d8a2198a8a7d85e01b"
+ENDPOINT = "https://kubecentrix.openai.azure.com/"
+EMBEDDING_DEPLOYMENT = "text-embedding-3-small"
+CHAT_DEPLOYMENT = "KubeCentrix"
+MAX_TOKENS = 8000  # Leave some buffer for the prompt and response
+
+# Initialize tokenizer
+tokenizer = tiktoken.get_encoding("cl100k_base")
+
+def num_tokens_from_string(string: str) -> int:
+    """Returns the number of tokens in a text string."""
+    return len(tokenizer.encode(string))
+
+def truncate_context(context: str, max_tokens: int) -> str:
+    """Truncates the context to fit within max_tokens."""
+    tokens = tokenizer.encode(context)
+    if len(tokens) <= max_tokens:
+        return context
+    return tokenizer.decode(tokens[:max_tokens])
 
 def extract_text_from_pdf(pdf_path):
     logging.info(f"Extracting text from PDF: {pdf_path}")
-    with open(pdf_path, 'rb') as file:
-        pdf_reader = PyPDF2.PdfReader(file)
-        num_pages = len(pdf_reader.pages)
-        text = ''
-        for page_num in range(num_pages):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
+    text = ''
+    try:
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            num_pages = len(pdf_reader.pages)
+            for page_num in range(num_pages):
+                page = pdf_reader.pages[page_num]
+                text += page.extract_text()
+    except Exception as e:
+        logging.error(f"Error extracting text from PDF {pdf_path}: {e}")
     return text
 
 def process_pdfs(pdf_dir, output_dir):
@@ -34,9 +58,40 @@ def process_pdfs(pdf_dir, output_dir):
             text = extract_text_from_pdf(pdf_path)
             all_texts.append(text)
             
-            with open(os.path.join(output_dir, f"{pdf_name}_text.txt"), "w", encoding="utf-8") as file:
-                file.write(text)
+            output_path = os.path.join(output_dir, f"{pdf_name}_text.txt")
+            try:
+                with open(output_path, "w", encoding="utf-8") as file:
+                    file.write(text)
+            except Exception as e:
+                logging.error(f"Error writing text to file {output_path}: {e}")
     return '\n'.join(all_texts)
+
+def get_embedding(text):
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": API_KEY
+    }
+    data = {
+        "input": text
+    }
+    response = requests.post(
+        f"{ENDPOINT}/openai/deployments/{EMBEDDING_DEPLOYMENT}/embeddings?api-version=2023-05-15",
+        headers=headers,
+        json=data
+    )
+    if response.status_code == 200:
+        return response.json()['data'][0]['embedding']
+    else:
+        logging.error(f"Error getting embedding: {response.status_code}")
+        logging.error(response.text)
+        return None
+
+class AzureOpenAIEmbeddings:
+    def embed_documents(self, texts):
+        return [get_embedding(text) for text in texts]
+
+    def embed_query(self, text):
+        return get_embedding(text)
 
 def create_vector_db(combined_text, embedding_file_path):
     logging.info("Splitting text into chunks")
@@ -44,46 +99,88 @@ def create_vector_db(combined_text, embedding_file_path):
     chunks = text_splitter.split_text(combined_text)
     logging.info(f"Number of chunks created: {len(chunks)}")
 
-    logging.info("Initializing HuggingFace embeddings")
-    huggin_embeddings = HuggingFaceBgeEmbeddings(
-        model_name="BAAI/bge-small-en-v1.5",
-        model_kwargs={'device': 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
-    )
+    logging.info("Initializing Azure OpenAI embeddings")
+    azure_embeddings = AzureOpenAIEmbeddings()
 
-    logging.info("Creating Chroma vector store")
-    client = chromadb.PersistentClient(path=embedding_file_path, settings=Settings(anonymized_telemetry=False))
-    vector_store = Chroma.from_texts(
-        texts=chunks,
-        embedding=huggin_embeddings,
-        client=client,
-        persist_directory=f"{embedding_file_path}/combined_db"
-    )
+    logging.info("Creating FAISS vector store")
+    embeddings = [np.array(get_embedding(chunk)) for chunk in chunks]
+    embedding_size = len(embeddings[0])
+    index = faiss.IndexFlatL2(embedding_size)
+    index.add(np.array(embeddings))
+
+    faiss.write_index(index, embedding_file_path)
     logging.info("Vector store created successfully")
-    return vector_store
+    return index, chunks
 
-def setup_rag_chain(vector_db):
-    logging.info("Setting up RAG chain")
-    local_model = "gemma:2b"
-    llm = ChatOllama(model=local_model, top_k=60)
-    retriever = vector_db.as_retriever()
-
-    systemprompt = (
-        "You are an assistant for question-answering tasks. "
-        "Use the following pieces of retrieved context to answer "
-        "the question. If you don't know the answer, say that you "
-        "don't know. Use three sentences maximum and keep the "
-        "answer concise.\n\n"
-        "Context: {context}\n"
-        "Customer Info: {customer_info}"
+def query_azure_openai(prompt):
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": API_KEY
+    }
+    data = {
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ]
+    }
+    response = requests.post(
+        f"{ENDPOINT}/openai/deployments/{CHAT_DEPLOYMENT}/chat/completions?api-version=2023-05-15",
+        headers=headers,
+        json=data
     )
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content']
+    else:
+        logging.error(f"Error: {response.status_code}")
+        logging.error(response.text)
+        return None
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", systemprompt),
-        ("human", "{input}")
-    ])
+def run_test():
+    try:
+        # Set up directories
+        pdf_dir = "Docs"
+        output_dir = "extracted_text"
+        embedding_file_path = "embeddings/combined_index"
 
-    question_answer_chain = create_stuff_documents_chain(llm, prompt)
-    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-    logging.info("RAG chain setup completed successfully")
-    return rag_chain
+        # Ensure output and embedding directories exist
+        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(os.path.dirname(embedding_file_path), exist_ok=True)
+
+        # Process PDFs
+        combined_text = process_pdfs(pdf_dir, output_dir)
+        logging.info("PDF processing completed")
+
+        # Create vector database
+        index, chunks = create_vector_db(combined_text, embedding_file_path)
+        logging.info("Vector database created")
+
+        # Test query
+        test_query = "What is the main topic of the documents?"
+        
+        # Retrieve relevant context from vector store
+        embedding_query = get_embedding(test_query)
+        D, I = index.search(np.array([embedding_query]), k=5)  # Increased from 3 to 5
+        relevant_docs = [chunks[i] for i in I[0]]
+        relevant_context = "\n".join(relevant_docs)
+        
+        # Truncate context if necessary
+        max_context_tokens = MAX_TOKENS - num_tokens_from_string(test_query) - 100  # Leave room for query and some buffer
+        truncated_context = truncate_context(relevant_context, max_context_tokens)
+        
+        # Construct the full prompt
+        full_prompt = f"Based on the following context, please answer the question: '{test_query}'\n\nContext: {truncated_context}"
+        
+        # Query Azure OpenAI
+        response = query_azure_openai(full_prompt)
+
+        if response:
+            logging.info(f"Test Query: {test_query}")
+            logging.info(f"Response: {response}")
+        else:
+            logging.error("Failed to get a response from Azure OpenAI")
+
+    except Exception as e:
+        logging.error(f"Error during test run: {e}")
+
+if __name__ == "__main__":
+    run_test()
