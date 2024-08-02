@@ -1,4 +1,3 @@
-/* Style for titles and headers */
 .stTitle, .stSubheader, h1, h2, h3, h4, h5, h6 {
     color: #FF6600 !important;
 }
@@ -17,7 +16,7 @@ body {
     color: #000000;
     background-color: #ffffff;
     font-family: 'Arial', sans-serif;
-    padding-bottom: 50px;
+    padding-bottom: 120px; /* Adjusted for input box and footer */
 }
 
 .stApp {
@@ -27,7 +26,7 @@ body {
 /* Button styles */
 .stButton > button {
     background-color: #FF6600;
-    color: #FFFFFF !important;  /* Ensure white text on buttons */
+    color: #FFFFFF !important;
     border: none;
     border-radius: 4px;
     padding: 0.3rem 0.6rem;
@@ -42,7 +41,7 @@ body {
     color: #FFFFFF !important;
 }
 
-/* Add this new style for the button container */
+/* Button container style */
 [data-testid="column"] > [data-testid="stHorizontalBlock"] {
     gap: 0.5rem !important;
 }
@@ -102,17 +101,27 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 
 /* Chat container styles */
 #chat-container {
-    max-height: 400px;
+    height: 300px;
     overflow-y: auto;
-    margin-bottom: 20px;
+    margin-bottom: 30px; /* Space between chat and input box */
+    border: 1px solid #fa6c0d;
+    padding: 10px;
+    background-color: #f9f9f9;
 }
 
 /* Chat message styles */
-.css-1d391kg {
-    background-color: #FFF1E6;
+#chat-container div {
     margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#chat-container div:nth-child(odd) {
+    background-color: #e6e6e6;
+}
+
+#chat-container div:nth-child(even) {
+    background-color: #ffffff;
 }
 
 /* Ensure sidebar has white background */
@@ -179,7 +188,7 @@ p, span, label, .stTextInput > div > div > input::placeholder {
     background-color: #FFFFFF;
     border-radius: 22px;
     padding: 8px 16px;
-    margin-top: 20px;  /* Adjusted to move the input box up */
+    margin-top: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     width: 10%;
     max-width: 800px;
@@ -283,11 +292,11 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 }
 
 .setting-info {
-    background-color: #f0f8ff; /* Light blue background */
+    background-color: #f0f8ff;
     border-radius: 5px;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #FF6600; /* Orange border */
+    border: 1px solid #FF6600;
 }
 
 .setting-info label {
@@ -303,16 +312,16 @@ p, span, label, .stTextInput > div > div > input::placeholder {
 
 .input-button-container {
     display: flex;
-    gap: 10px; /* Adjust the gap between input and buttons */
+    gap: 10px;
     align-items: center;
 }
 
 .button-container {
     display: flex;
-    gap: 10px; /* Adjust the gap as needed */
+    gap: 10px;
     align-items: center;
 }
 
 .stButton > button {
-    margin-right: 0.5rem; /* Adjust the margin between buttons */
+    margin-right: 0.5rem;
 }

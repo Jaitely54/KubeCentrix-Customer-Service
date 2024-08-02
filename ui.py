@@ -164,6 +164,7 @@ def handle_query(query, user_info, query_type, user_files):
 
 def login_form():
 
+
     st.image(logo, width=100)
     st.markdown("""
         <div class="header">
@@ -301,8 +302,10 @@ def show_disclaimer():
             st.experimental_rerun()
 
 
-# MARK: Chat UIc
+# MARK: Chat UI
 def show_chat_ui():
+
+
     # Header Section
     header_col1, header_col2, header_col3 = st.columns([1, 3, 1])
     
@@ -315,65 +318,108 @@ def show_chat_ui():
     with header_col2:
         st.title("VirtualBOB: Your Banking Assistant")
         
-        
     with header_col3:
-        tabs = st.tabs(["Settings", "Tab2", "Tab3"])
+        tabs = st.tabs(["Settings", "Profile", "Statement"])
         
         with tabs[0]:
             # Preferred language selection under Settings tab
             languages = {
-                'en': 'English', 'hi': 'Hindi', 'es': 'Spanish', 'fr': 'French',
-                'de': 'German', 'it': 'Italian', 'pt': 'Portuguese', 'ru': 'Russian',
-                'ja': 'Japanese', 'ko': 'Korean', 'zh-cn': 'Chinese (Simplified)'
-            }
+                'en': 'English','hi': 'Hindi','mr': 'Marathi',
+                'te': 'Telugu','pa': 'Punjabi','bho': 'Bhojpuri',
+                'hr': 'Haryanvi','ml': 'Malayalam','ta': 'Tamil'
+                }
             st.session_state.preferred_lang = st.selectbox(
                 "Select your preferred language:",
                 list(languages.keys()),
                 format_func=lambda x: languages[x],
                 index=list(languages.keys()).index(st.session_state.preferred_lang)
             )
+        with tabs[1]:
+            st.info("User Profile here")
+        with tabs[2]:
+            st.info("Bank Statement here")
 
     # Chat Section
     chat_col, profile_col = st.columns([3, 1])
 
     with chat_col:
+        # Move the button container here, just before the subheader
+        st.markdown("<div class='button-container' style='display: flex; align-items: center; justify-content: space-between;'>", unsafe_allow_html=True)
         
-        with st.container():
-            st.markdown("<div class='button-container'>", unsafe_allow_html=True)
-            button_col1, button_col2, button_col4, button_col5 = st.columns([0.7, 0.7, 0.7, 2.2])
-            
-            with button_col1:
-                temp_chat = st.toggle("Temp", key="temp_chat")
-                
-            with button_col2:
-                if st.button("General Query"):
-                    st.session_state.query_type = "general_query"
-                    st.experimental_rerun()
-                    
-            with button_col4:
-                if st.button("Bank Statement"):
-                    st.session_state.query_type = "bank_statement"
-                    st.experimental_rerun()
-                    
-            with button_col5:
-                if st.button("Logout"):
-                    for key in list(st.session_state.keys()):
-                        del st.session_state[key]
-                    st.experimental_rerun()
-                    
-            st.markdown("</div>", unsafe_allow_html=True)
+        # Left side: Subheader
+        st.markdown("<h3 style='margin: 0;'>Ask a Question:</h3>", unsafe_allow_html=True)
+        
+        # Right side: Buttons
+        button_col1, button_col2, button_col3, button_col4 = st.columns([1, 1, 1, 1])
+        with button_col1:
+            temp_chat = st.toggle("Temp", key="temp_chat")
+        with button_col2:
+            if st.button("General Query"):
+                st.session_state.query_type = "general_query"
+                st.experimental_rerun()
+        with button_col3:
+            if st.button("Bank Statement"):
+                st.session_state.query_type = "bank_statement"
+                st.experimental_rerun()
+        with button_col4:
+            if st.button("Logout"):
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.experimental_rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
         # st.subheader("Chat History")
-        # for i, (message_text, is_user) in enumerate(st.session_state.messages):
-        #     message(message_text, is_user=is_user, key=str(i))
-        #     if not is_user:
-        #         if st.button(f"🔊 Listen", key=f"listen_{i}"):
-        #             text_to_speech(message_text)
+            # for i, (message_text, is_user) in enumerate(st.session_state.messages):
+            #     message(message_text, is_user=is_user, key=str(i))
+            #     if not is_user:
+            #         if st.button(f"🔊 Listen", key=f"listen_{i}"):
+            #             text_to_speech(message_text)
 
-        # "Ask a question:" section outside the loop
         st.subheader("Ask a Question:")
-        input_col1, input_col2, input_col3 = st.columns([2, 1, 1])
-        
+
+        # Add chat display area
+        st.markdown("""
+            <div id='chat-container' style='
+                height: 200px; 
+                width: 85%;
+                overflow-y: auto; 
+                margin-bottom: 1px; 
+                border: 1px solid #FF6600;
+                border-radius: 10px; 
+                padding: 10px;
+                background-color: #f9f9f9;
+            '>
+        """, unsafe_allow_html=True)
+
+        # Display messages inside the container
+        for i, (message_text, is_user) in enumerate(st.session_state.messages):
+            if is_user:
+                st.markdown(f"<div style='text-align: right;'><strong>You:</strong> {message_text}</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div><strong>VirtualBOB:</strong> {message_text}</div>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # JavaScript for auto-scrolling
+        st.markdown("""
+        <script>
+            function scrollToBottom() {
+                var chatContainer = document.getElementById('chat-container');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            // Run on load
+            scrollToBottom();
+            // Set up a MutationObserver to watch for changes in the chat container
+            var observer = new MutationObserver(scrollToBottom);
+            observer.observe(document.getElementById('chat-container'), {childList: true, subtree: true});
+        </script>
+        """, unsafe_allow_html=True)
+
+        # Input box and buttons
+        input_col1, input_col2, input_col3 = st.columns([2,1,1])
+
         with input_col1:
             user_input = st.text_input(
                 "Input Box",
@@ -381,7 +427,7 @@ def show_chat_ui():
                 key="user_input",
                 label_visibility="collapsed"
             )
-            
+        
         with input_col2:
             if st.button("Submit"):
                 if user_input and user_input.strip():
@@ -389,6 +435,9 @@ def show_chat_ui():
                     response = handle_query(user_input, st.session_state.user, st.session_state.query_type, st.session_state.user_files)
                     st.session_state.messages.append((response, False))
                     st.experimental_rerun()
+            
+            
+            
         with input_col3:
             if st.button("🎙️ Ask"):
                 user_input = speech_to_text()
@@ -397,6 +446,7 @@ def show_chat_ui():
                     st.experimental_rerun()
                 else:
                     st.error("Sorry, I couldn't understand that. Please try again.")
+            
 
     # Profile Section
     with profile_col:
@@ -413,13 +463,13 @@ def show_chat_ui():
             <p><strong>Branch Code:</strong> {user_data['bank_details']['branch_code']}</p>
             <p><strong>IFSC Code:</strong> {user_data['bank_details']['ifsc_code']}</p>
             <p><strong>Account Type:</strong> {user_data['bank_details']['account_type']}</p>
-            <p><strong>Balance:</strong> ${user_data['bank_details']['balance']:.2f}</p>
+            <p><strong>Balance:</strong> ₹{user_data['bank_details']['balance']:.2f}</p>
         </div>
         """, unsafe_allow_html=True)
 
     # Footer
     st.markdown("""
-    <div class="footer">
+    <div class="footer" style="position: fixed; left: 0; bottom: 0; width: 100%; background-color: white; color: black; text-align: center; padding: 10px 0; font-size: 14px; border-top: 1px solid #FF6600;">
         <p>© 2024 KubeCentrix. All rights reserved.</p>
     </div>
     """, unsafe_allow_html=True)
