@@ -71,6 +71,17 @@ The project is organized into the following modules:
     pip install -r requirements.txt
     ```
 
+
+4. **Run the UI:**
+    ```bash
+    python ui.py
+    ```
+
+5. **Use Test User Credentials:**
+   - **User ID:** 123
+   - **Password:** 123
+
+
 ## Configuration
 
 - **API Keys:** Ensure you have set up the API keys for OpenAI and other services in the `Dynamic/variables.py` file.
