@@ -7,17 +7,13 @@ import tiktoken
 import faiss
 import numpy as np
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from Dynamic.variables import API_KEY_Azure,ENDPOINT, EMBEDDING_DEPLOYMENT, CHAT_DEPLOYMENT, MAX_TOKENS
 
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Azure OpenAI credentials
-API_KEY = "84a8931a7b2b42d8a2198a8a7d85e01b"
-ENDPOINT = "https://kubecentrix.openai.azure.com/"
-EMBEDDING_DEPLOYMENT = "text-embedding-3-small"
-CHAT_DEPLOYMENT = "KubeCentrix"
-MAX_TOKENS = 8000  # Leave some buffer for the prompt and response
+
 
 # Initialize tokenizer
 tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -69,7 +65,7 @@ def process_pdfs(pdf_dir, output_dir):
 def get_embedding(text):
     headers = {
         "Content-Type": "application/json",
-        "api-key": API_KEY
+        "api-key": API_KEY_Azure
     }
     data = {
         "input": text
@@ -115,7 +111,7 @@ def create_vector_db(combined_text, embedding_file_path):
 def query_azure_openai(prompt):
     headers = {
         "Content-Type": "application/json",
-        "api-key": API_KEY
+        "api-key": API_KEY_Azure
     }
     data = {
         "messages": [
