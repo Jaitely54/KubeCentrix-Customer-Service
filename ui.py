@@ -1,41 +1,33 @@
-
-# MARK: Importing Libraries
 import os
 import json
-import openai
 import numpy as np
 import streamlit as st
 from bank_crm import BankCRM
-# from Dynamic.variables import api_key
 from utils.user_authentication import UserAuth
 from voice import speech_to_text
 from utils.setup import setup_directories, get_cwd
 from translate import translate_text, detect_language
 from rag import process_pdfs, create_vector_db, query_azure_openai, get_embedding
-from bank_statement import load_csv, optimize_dataframe, query_openai, execute_pandas_code, generate_summary
+from bank_statement import load_csv, optimize_dataframe, execute_pandas_code, generate_summary
 
+# Azure OpenAI configurations
+AZURE_OPENAI_ENDPOINT = os.getenv('AZURE_OPENAI_ENDPOINT')
+AZURE_OPENAI_KEY = os.getenv('AZURE_OPENAI_KEY')
+AZURE_OPENAI_MODEL = os.getenv('AZURE_OPENAI_MODEL')
 
 pwd = os.getcwd()
-
-logo =f"{pwd}/Images/logo-no-background.svg"
-# Set up OpenAI API key
-openai.api_key = api_key
-
+logo = f"{pwd}/Images/logo-no-background.svg"
 
 def load_environment():
-    if not openai.api_key:
-        st.error(
-            "No API key provided. Please set the API key in the variables.py file.")
+    if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_KEY or not AZURE_OPENAI_MODEL:
+        st.error("Azure OpenAI configurations are missing. Please set the required environment variables.")
         st.stop()
-
 
 # Call load_environment at the start
 load_environment()
 st.set_page_config(layout="wide", page_title="VirtualBOB")
 
 # Custom CSS
-
-
 def local_css(file_name):
     try:
         with open(file_name, "r") as f:
@@ -43,12 +35,9 @@ def local_css(file_name):
     except FileNotFoundError:
         st.warning(f"{file_name} file not found. Using default styles.")
 
-
 local_css("style.css")
 
 # Initialize backend components
-
-
 @st.cache_resource
 def initialize_backend():
     pdf_dir, output_dir, embedding_file_path = setup_directories()
@@ -57,7 +46,6 @@ def initialize_backend():
     crm = BankCRM()
     auth = UserAuth(crm)
     return index, chunks, crm, auth
-
 
 index, chunks, crm, auth = initialize_backend()
 
@@ -89,9 +77,32 @@ if 'detected_lang' not in st.session_state:
 if 'preferred_lang' not in st.session_state:
     st.session_state.preferred_lang = 'en'
 
+# Function to query Azure OpenAI
+def query_azure_openai(prompt):
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": AZURE_OPENAI_KEY
+    }
+    data = {
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 800
+    }
+    response = requests.post(
+        f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/{AZURE_OPENAI_MODEL}/chat/completions?api-version=2023-05-15",
+        headers=headers,
+        json=data
+    )
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content']
+    else:
+        st.error(f"Error: {response.status_code}")
+        st.error(response.text)
+        return None
+
 # Function to handle different types of queries
-
-
 def handle_query(query, user_info, query_type, user_files):
     detected_lang = detect_language(query)
     st.session_state.detected_lang = detected_lang
@@ -124,15 +135,13 @@ def handle_query(query, user_info, query_type, user_files):
 
         Ensure the code follows all the guidelines provided earlier.
         """
-        generated_code = query_openai(prompt)
+        generated_code = query_azure_openai(prompt)
         result = execute_pandas_code(generated_code, st.session_state.df)
         summary = generate_summary(english_query, result)
-        translated_summary = translate_text(
-            summary, target_language=target_lang)
+        translated_summary = translate_text(summary, target_language=target_lang)
         return translated_summary
     else:
-        english_query = query if detected_lang == 'en' else translate_text(
-            query, target_language='en')
+        english_query = query if detected_lang == 'en' else translate_text(query, target_language='en')
 
         embedding_query = get_embedding(english_query)
         D, I = index.search(np.array([embedding_query]), k=5)
@@ -149,8 +158,7 @@ def handle_query(query, user_info, query_type, user_files):
 
         if response:
             if target_lang != 'en':
-                translated_response = translate_text(
-                    response, target_language=target_lang)
+                translated_response = translate_text(response, target_language=target_lang)
                 return translated_response
             else:
                 return response
