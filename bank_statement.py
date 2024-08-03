@@ -8,25 +8,20 @@ import pandas as pd
 from tabulate import tabulate
 from utils.setup import get_cwd
 from functools import lru_cache
-from Dynamic.variables import api_key
-# import os
-# import numpy as np
-# from dotenv import load_dotenv
+import os
 
 warnings.filterwarnings("ignore")
 
 # Module: Logging and Configuration
 def setup_logging():
-    logging.basicConfig(level=logging.INFO,filename='logs.log',filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, filename='logs.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
 
 def load_environment():
-    # load_dotenv()
-    openai.api_key = api_key
+    openai.api_key = os.getenv('OPENAI_API_KEY')
+    if not openai.api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
 
-openai.api_key=api_key
-
-
-# Module: Data Loading and Optimizaxtion
+# Module: Data Loading and Optimization
 @lru_cache(maxsize=32)
 def load_csv(file_path):
     try:
@@ -236,7 +231,6 @@ def main():
     setup_logging()
     load_environment()
     
-    # csv_path = input("Enter the path to your Bank of Baroda statement CSV file: ").strip()
     csv_path = get_cwd()
     
     try:
