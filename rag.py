@@ -1,3 +1,5 @@
+# rag.py
+
 import logging
 import PyPDF2
 import os
@@ -7,13 +9,9 @@ import tiktoken
 import faiss
 import numpy as np
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from Dynamic.variables import API_KEY_Azure,ENDPOINT, EMBEDDING_DEPLOYMENT, CHAT_DEPLOYMENT, MAX_TOKENS
-
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
 
 # Initialize tokenizer
 tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -62,16 +60,16 @@ def process_pdfs(pdf_dir, output_dir):
                 logging.error(f"Error writing text to file {output_path}: {e}")
     return '\n'.join(all_texts)
 
-def get_embedding(text):
+def get_embedding(text, api_key, endpoint, deployment_name):
     headers = {
         "Content-Type": "application/json",
-        "api-key": API_KEY_Azure
+        "api-key": api_key
     }
     data = {
         "input": text
     }
     response = requests.post(
-        f"{ENDPOINT}/openai/deployments/{EMBEDDING_DEPLOYMENT}/embeddings?api-version=2023-05-15",
+        f"{endpoint}/openai/deployments/{deployment_name}/embeddings?api-version=2023-05-15",
         headers=headers,
         json=data
     )
@@ -83,23 +81,28 @@ def get_embedding(text):
         return None
 
 class AzureOpenAIEmbeddings:
+    def __init__(self, api_key, endpoint, deployment_name):
+        self.api_key = api_key
+        self.endpoint = endpoint
+        self.deployment_name = deployment_name
+
     def embed_documents(self, texts):
-        return [get_embedding(text) for text in texts]
+        return [get_embedding(text, self.api_key, self.endpoint, self.deployment_name) for text in texts]
 
     def embed_query(self, text):
-        return get_embedding(text)
+        return get_embedding(text, self.api_key, self.endpoint, self.deployment_name)
 
-def create_vector_db(combined_text, embedding_file_path):
+def create_vector_db(combined_text, embedding_file_path, api_key, endpoint, deployment_name):
     logging.info("Splitting text into chunks")
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     chunks = text_splitter.split_text(combined_text)
     logging.info(f"Number of chunks created: {len(chunks)}")
 
     logging.info("Initializing Azure OpenAI embeddings")
-    azure_embeddings = AzureOpenAIEmbeddings()
+    azure_embeddings = AzureOpenAIEmbeddings(api_key, endpoint, deployment_name)
 
     logging.info("Creating FAISS vector store")
-    embeddings = [np.array(get_embedding(chunk)) for chunk in chunks]
+    embeddings = azure_embeddings.embed_documents(chunks)
     embedding_size = len(embeddings[0])
     index = faiss.IndexFlatL2(embedding_size)
     index.add(np.array(embeddings))
@@ -108,10 +111,10 @@ def create_vector_db(combined_text, embedding_file_path):
     logging.info("Vector store created successfully")
     return index, chunks
 
-def query_azure_openai(prompt):
+def query_azure_openai(prompt, api_key, endpoint, deployment_name):
     headers = {
         "Content-Type": "application/json",
-        "api-key": API_KEY_Azure
+        "api-key": api_key
     }
     data = {
         "messages": [
@@ -120,7 +123,7 @@ def query_azure_openai(prompt):
         ]
     }
     response = requests.post(
-        f"{ENDPOINT}/openai/deployments/{CHAT_DEPLOYMENT}/chat/completions?api-version=2023-05-15",
+        f"{endpoint}/openai/deployments/{deployment_name}/chat/completions?api-version=2023-05-15",
         headers=headers,
         json=data
     )
@@ -130,53 +133,3 @@ def query_azure_openai(prompt):
         logging.error(f"Error: {response.status_code}")
         logging.error(response.text)
         return None
-
-def run_test():
-    try:
-        # Set up directories
-        pdf_dir = "Docs"
-        output_dir = "extracted_text"
-        embedding_file_path = "embeddings/combined_index"
-
-        # Ensure output and embedding directories exist
-        os.makedirs(output_dir, exist_ok=True)
-        os.makedirs(os.path.dirname(embedding_file_path), exist_ok=True)
-
-        # Process PDFs
-        combined_text = process_pdfs(pdf_dir, output_dir)
-        logging.info("PDF processing completed")
-
-        # Create vector database
-        index, chunks = create_vector_db(combined_text, embedding_file_path)
-        logging.info("Vector database created")
-
-        # Test query
-        test_query = "What is the main topic of the documents?"
-        
-        # Retrieve relevant context from vector store
-        embedding_query = get_embedding(test_query)
-        D, I = index.search(np.array([embedding_query]), k=5)  # Increased from 3 to 5
-        relevant_docs = [chunks[i] for i in I[0]]
-        relevant_context = "\n".join(relevant_docs)
-        
-        # Truncate context if necessary
-        max_context_tokens = MAX_TOKENS - num_tokens_from_string(test_query) - 100  # Leave room for query and some buffer
-        truncated_context = truncate_context(relevant_context, max_context_tokens)
-        
-        # Construct the full prompt
-        full_prompt = f"Based on the following context, please answer the question: '{test_query}'\n\nContext: {truncated_context}"
-        
-        # Query Azure OpenAI
-        response = query_azure_openai(full_prompt)
-
-        if response:
-            logging.info(f"Test Query: {test_query}")
-            logging.info(f"Response: {response}")
-        else:
-            logging.error("Failed to get a response from Azure OpenAI")
-
-    except Exception as e:
-        logging.error(f"Error during test run: {e}")
-
-if __name__ == "__main__":
-    run_test()
