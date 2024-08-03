@@ -6,7 +6,7 @@ import openai
 import numpy as np
 import streamlit as st
 from bank_crm import BankCRM
-from Dynamic.variables import api_key
+# from Dynamic.variables import api_key
 from utils.user_authentication import UserAuth
 from voice import speech_to_text
 from utils.setup import setup_directories, get_cwd
