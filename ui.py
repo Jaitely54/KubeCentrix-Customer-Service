@@ -143,8 +143,7 @@ def handle_query(query, user_info, query_type, user_files):
                          "information to customers based on the bank's policies and the customer's specific "
                          "information. Always be polite, professional, and prioritize the customer's needs.")
 
-        full_prompt = f"System: {system_prompt}\n\nHuman: Based on the following context and user information, please answer the question: '{
-            english_query}'\n\nContext: {relevant_context}\n\nUser Info: {user_info}\nUser Files: {user_files}\n\nAssistant:"
+        full_prompt = f"System: {system_prompt}\n\nHuman: Based on the following context and user information, please answer the question: '{english_query}'\n\nContext: {relevant_context}\n\nUser Info: {user_info}\nUser Files: {user_files}\n\nAssistant:"
 
         response = query_azure_openai(full_prompt)
 
