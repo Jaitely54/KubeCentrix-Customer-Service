@@ -5,7 +5,7 @@ pandas
 numpy
 openai
 tabulate
-
+googletrans
 PyPDF2
 langchain
 langchain-community
