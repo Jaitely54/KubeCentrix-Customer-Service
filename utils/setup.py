@@ -4,7 +4,7 @@ from pathlib import Path
 def setup_directories():
     cwd = os.getcwd()
     output_path = f"{cwd}/output_dir"
-    pdf_dir = os.path.join(cwd, 'Documentations')
+    pdf_dir = os.path.join(cwd, 'Documentation')
     output_dir = os.path.join(output_path, 'extracted_text')
     os.makedirs(output_dir, exist_ok=True)
     embedding_file_path = os.path.join(os.path.expanduser("~"), "Documents", "embeddings")
