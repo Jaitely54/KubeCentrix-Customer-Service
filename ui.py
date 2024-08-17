@@ -1,31 +1,40 @@
+
+# MARK: Importing Libraries
 import os
 import json
+import openai
 import numpy as np
 import streamlit as st
 from bank_crm import BankCRM
-from utils.user_authentication import UserAuth
+from Dynamic.variables import api_key
+from user_authentication import UserAuth
 from voice import speech_to_text
-from utils.setup import setup_directories, get_cwd
+from setup import setup_directories, get_cwd
 from translate import translate_text, detect_language
 from rag import process_pdfs, create_vector_db, query_azure_openai, get_embedding
-from bank_statement import load_csv, optimize_dataframe, execute_pandas_code, generate_summary
+from bank_statement import load_csv, optimize_dataframe, query_openai, execute_pandas_code, generate_summary
 
-# Azure OpenAI configurations
-AZURE_OPENAI_KEY = os.getenv('AZURE_OPENAI_KEY')
-AZURE_OPENAI_ENDPOINT = os.getenv('AZURE_OPENAI_ENDPOINT')
-AZURE_OPENAI_MODEL = os.getenv('AZURE_OPENAI_MODEL')
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv('AZURE_OPENAI_EMBEDDING_DEPLOYMENT')
 
 pwd = os.getcwd()
-logo = f"{pwd}/Images/logo-no-background.svg"
+
+logo =f"{pwd}/Images/logo-no-background.svg"
+# Set up OpenAI API key
+openai.api_key = api_key
+
 
 def load_environment():
-    if not all([AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_MODEL, AZURE_OPENAI_EMBEDDING_DEPLOYMENT]):
-        st.error("Azure OpenAI configurations are missing. Please set the required environment variables.")
+    if not openai.api_key:
+        st.error(
+            "No API key provided. Please set the API key in the variables.py file.")
         st.stop()
 
+
+# Call load_environment at the start
 load_environment()
 st.set_page_config(layout="wide", page_title="VirtualBOB")
+
+# Custom CSS
+
 
 def local_css(file_name):
     try:
@@ -34,36 +43,59 @@ def local_css(file_name):
     except FileNotFoundError:
         st.warning(f"{file_name} file not found. Using default styles.")
 
+
 local_css("style.css")
+
+# Initialize backend components
+
 
 @st.cache_resource
 def initialize_backend():
     pdf_dir, output_dir, embedding_file_path = setup_directories()
-    combined_text = process_pdfs(pdf_dir, output_dir) if os.path.exists(pdf_dir) else ""
-    combined_text = combined_text or "This is a placeholder text for initialization."
-    index, chunks = create_vector_db(combined_text, embedding_file_path, 
-                                     AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, 
-                                     AZURE_OPENAI_EMBEDDING_DEPLOYMENT)
+    combined_text = process_pdfs(pdf_dir, output_dir)
+    index, chunks = create_vector_db(combined_text, embedding_file_path)
     crm = BankCRM()
     auth = UserAuth(crm)
     return index, chunks, crm, auth
 
+
 index, chunks, crm, auth = initialize_backend()
 
+# Load user data
 try:
     with open('SampleUser.json', 'r') as file:
-        user_data = json.load(file)[0]
-except (FileNotFoundError, json.JSONDecodeError):
-    st.error("Error loading user data file.")
+        user_data = json.load(file)[0]  # Assuming the first user in the list
+except FileNotFoundError:
+    user_data = None
+except json.JSONDecodeError:
+    st.error("Error decoding user data file.")
     user_data = None
 
-for state_var in ['user', 'messages', 'query_type', 'user_files', 'df', 'disclaimer_accepted', 'detected_lang', 'preferred_lang']:
-    if state_var not in st.session_state:
-        st.session_state[state_var] = None if state_var != 'messages' else []
+# Initialize session state
+if 'user' not in st.session_state:
+    st.session_state.user = None
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+if 'query_type' not in st.session_state:
+    st.session_state.query_type = None
+if 'user_files' not in st.session_state:
+    st.session_state.user_files = None
+if 'df' not in st.session_state:
+    st.session_state.df = None
+if 'disclaimer_accepted' not in st.session_state:
+    st.session_state.disclaimer_accepted = False
+if 'detected_lang' not in st.session_state:
+    st.session_state.detected_lang = 'en'
+if 'preferred_lang' not in st.session_state:
+    st.session_state.preferred_lang = 'en'
+
+# Function to handle different types of queries
+
 
 def handle_query(query, user_info, query_type, user_files):
     detected_lang = detect_language(query)
     st.session_state.detected_lang = detected_lang
+
     target_lang = 'hi' if detected_lang == 'hi' else st.session_state.preferred_lang
 
     if query_type == "bank_statement":
@@ -73,6 +105,7 @@ def handle_query(query, user_info, query_type, user_files):
             st.session_state.df = optimize_dataframe(df)
 
         english_query = translate_text(query, target_language='en')
+
         prompt = f"""
         Generate Python pandas code to analyze the following aspect of the Bank of Baroda statement:
         {english_query}
@@ -91,32 +124,44 @@ def handle_query(query, user_info, query_type, user_files):
 
         Ensure the code follows all the guidelines provided earlier.
         """
-        generated_code = query_azure_openai(prompt, AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_MODEL)
+        generated_code = query_openai(prompt)
         result = execute_pandas_code(generated_code, st.session_state.df)
         summary = generate_summary(english_query, result)
-        return translate_text(summary, target_language=target_lang)
+        translated_summary = translate_text(
+            summary, target_language=target_lang)
+        return translated_summary
     else:
         english_query = query if detected_lang == 'en' else translate_text(query, target_language='en')
-        embedding_query = get_embedding(english_query, AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_EMBEDDING_DEPLOYMENT)
+
+        embedding_query = get_embedding(english_query)
         D, I = index.search(np.array([embedding_query]), k=5)
         relevant_docs = [chunks[i] for i in I[0]]
         relevant_context = "\n".join(relevant_docs)
 
-        system_prompt = ("You are an AI assistant for a bank. Your role is to provide accurate and helpful "
+        system_prompt = ("You a+re an AI assistant for a bank. Your role is to provide accurate and helpful "
                          "information to customers based on the bank's policies and the customer's specific "
                          "information. Always be polite, professional, and prioritize the customer's needs.")
 
         full_prompt = f"System: {system_prompt}\n\nHuman: Based on the following context and user information, please answer the question: '{english_query}'\n\nContext: {relevant_context}\n\nUser Info: {user_info}\nUser Files: {user_files}\n\nAssistant:"
 
-        response = query_azure_openai(full_prompt, AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_MODEL)
+        response = query_azure_openai(full_prompt)
 
         if response:
-            return translate_text(response, target_language=target_lang) if target_lang != 'en' else response
+            if target_lang != 'en':
+                translated_response = translate_text(response, target_language=target_lang)
+                return translated_response
+            else:
+                return response
         else:
             error_message = "Sorry, I couldn't generate a response. Please try again."
             return translate_text(error_message, target_language=target_lang)
 
+# MARK: Login form
+
+
 def login_form():
+
+
     st.image(logo, width=100)
     st.markdown("""
         <div class="header">
@@ -138,6 +183,9 @@ def login_form():
                 st.experimental_rerun()
             else:
                 st.error("Authentication failed. Please try again.")
+
+# MARK: New user registration form
+
 
 def registration_form():
     st.markdown("""
