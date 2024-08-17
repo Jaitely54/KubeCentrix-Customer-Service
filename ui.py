@@ -20,15 +20,13 @@ pwd = os.getcwd()
 logo = f"{pwd}/Images/logo-no-background.svg"
 
 def load_environment():
-    if not AZURE_OPENAI_KEY or not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_MODEL or not AZURE_OPENAI_EMBEDDING_DEPLOYMENT:
+    if not all([AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_MODEL, AZURE_OPENAI_EMBEDDING_DEPLOYMENT]):
         st.error("Azure OpenAI configurations are missing. Please set the required environment variables.")
         st.stop()
 
-# Call load_environment at the start
 load_environment()
 st.set_page_config(layout="wide", page_title="VirtualBOB")
 
-# Custom CSS
 def local_css(file_name):
     try:
         with open(file_name, "r") as f:
@@ -38,20 +36,11 @@ def local_css(file_name):
 
 local_css("style.css")
 
-# Initialize backend components
 @st.cache_resource
 def initialize_backend():
     pdf_dir, output_dir, embedding_file_path = setup_directories()
-    
-    if not os.path.exists(pdf_dir):
-        st.warning(f"PDF directory not found: {pdf_dir}. Initializing with empty data.")
-        combined_text = ""
-    else:
-        combined_text = process_pdfs(pdf_dir, output_dir)
-    
-    if not combined_text:
-        combined_text = "This is a placeholder text for initialization."
-    
+    combined_text = process_pdfs(pdf_dir, output_dir) if os.path.exists(pdf_dir) else ""
+    combined_text = combined_text or "This is a placeholder text for initialization."
     index, chunks = create_vector_db(combined_text, embedding_file_path, 
                                      AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, 
                                      AZURE_OPENAI_EMBEDDING_DEPLOYMENT)
@@ -61,64 +50,20 @@ def initialize_backend():
 
 index, chunks, crm, auth = initialize_backend()
 
-# Load user data
 try:
     with open('SampleUser.json', 'r') as file:
-        user_data = json.load(file)[0]  # Assuming the first user in the list
-except FileNotFoundError:
-    user_data = None
-except json.JSONDecodeError:
-    st.error("Error decoding user data file.")
+        user_data = json.load(file)[0]
+except (FileNotFoundError, json.JSONDecodeError):
+    st.error("Error loading user data file.")
     user_data = None
 
-# Initialize session state
-if 'user' not in st.session_state:
-    st.session_state.user = None
-if 'messages' not in st.session_state:
-    st.session_state.messages = []
-if 'query_type' not in st.session_state:
-    st.session_state.query_type = None
-if 'user_files' not in st.session_state:
-    st.session_state.user_files = None
-if 'df' not in st.session_state:
-    st.session_state.df = None
-if 'disclaimer_accepted' not in st.session_state:
-    st.session_state.disclaimer_accepted = False
-if 'detected_lang' not in st.session_state:
-    st.session_state.detected_lang = 'en'
-if 'preferred_lang' not in st.session_state:
-    st.session_state.preferred_lang = 'en'
+for state_var in ['user', 'messages', 'query_type', 'user_files', 'df', 'disclaimer_accepted', 'detected_lang', 'preferred_lang']:
+    if state_var not in st.session_state:
+        st.session_state[state_var] = None if state_var != 'messages' else []
 
-# Function to query Azure OpenAI
-def query_azure_openai(prompt):
-    headers = {
-        "Content-Type": "application/json",
-        "api-key": AZURE_OPENAI_KEY
-    }
-    data = {
-        "messages": [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": 800
-    }
-    response = requests.post(
-        f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/{AZURE_OPENAI_MODEL}/chat/completions?api-version=2023-05-15",
-        headers=headers,
-        json=data
-    )
-    if response.status_code == 200:
-        return response.json()['choices'][0]['message']['content']
-    else:
-        st.error(f"Error: {response.status_code}")
-        st.error(response.text)
-        return None
-
-# Function to handle different types of queries
 def handle_query(query, user_info, query_type, user_files):
     detected_lang = detect_language(query)
     st.session_state.detected_lang = detected_lang
-
     target_lang = 'hi' if detected_lang == 'hi' else st.session_state.preferred_lang
 
     if query_type == "bank_statement":
@@ -128,7 +73,6 @@ def handle_query(query, user_info, query_type, user_files):
             st.session_state.df = optimize_dataframe(df)
 
         english_query = translate_text(query, target_language='en')
-
         prompt = f"""
         Generate Python pandas code to analyze the following aspect of the Bank of Baroda statement:
         {english_query}
@@ -147,15 +91,13 @@ def handle_query(query, user_info, query_type, user_files):
 
         Ensure the code follows all the guidelines provided earlier.
         """
-        generated_code = query_azure_openai(prompt)
+        generated_code = query_azure_openai(prompt, AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_MODEL)
         result = execute_pandas_code(generated_code, st.session_state.df)
         summary = generate_summary(english_query, result)
-        translated_summary = translate_text(summary, target_language=target_lang)
-        return translated_summary
+        return translate_text(summary, target_language=target_lang)
     else:
         english_query = query if detected_lang == 'en' else translate_text(query, target_language='en')
-
-        embedding_query = get_embedding(english_query)
+        embedding_query = get_embedding(english_query, AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_EMBEDDING_DEPLOYMENT)
         D, I = index.search(np.array([embedding_query]), k=5)
         relevant_docs = [chunks[i] for i in I[0]]
         relevant_context = "\n".join(relevant_docs)
@@ -166,24 +108,15 @@ def handle_query(query, user_info, query_type, user_files):
 
         full_prompt = f"System: {system_prompt}\n\nHuman: Based on the following context and user information, please answer the question: '{english_query}'\n\nContext: {relevant_context}\n\nUser Info: {user_info}\nUser Files: {user_files}\n\nAssistant:"
 
-        response = query_azure_openai(full_prompt)
+        response = query_azure_openai(full_prompt, AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_MODEL)
 
         if response:
-            if target_lang != 'en':
-                translated_response = translate_text(response, target_language=target_lang)
-                return translated_response
-            else:
-                return response
+            return translate_text(response, target_language=target_lang) if target_lang != 'en' else response
         else:
             error_message = "Sorry, I couldn't generate a response. Please try again."
             return translate_text(error_message, target_language=target_lang)
 
-# MARK: Login form
-
-
 def login_form():
-
-
     st.image(logo, width=100)
     st.markdown("""
         <div class="header">
@@ -205,9 +138,6 @@ def login_form():
                 st.experimental_rerun()
             else:
                 st.error("Authentication failed. Please try again.")
-
-# MARK: New user registration form
-
 
 def registration_form():
     st.markdown("""
