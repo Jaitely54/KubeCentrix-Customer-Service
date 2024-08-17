@@ -10,7 +10,7 @@ import faiss
 import logging
 
 
-
+# shashank contribution here :)
 def create_new_user(auth, crm):
     print("\n--- Creating New User ---")
     user_id = input("Enter a new user ID: ")
