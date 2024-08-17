@@ -11,15 +11,16 @@ from rag import process_pdfs, create_vector_db, query_azure_openai, get_embeddin
 from bank_statement import load_csv, optimize_dataframe, execute_pandas_code, generate_summary
 
 # Azure OpenAI configurations
-AZURE_OPENAI_ENDPOINT = os.getenv('AZURE_OPENAI_ENDPOINT')
 AZURE_OPENAI_KEY = os.getenv('AZURE_OPENAI_KEY')
+AZURE_OPENAI_ENDPOINT = os.getenv('AZURE_OPENAI_ENDPOINT')
 AZURE_OPENAI_MODEL = os.getenv('AZURE_OPENAI_MODEL')
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv('AZURE_OPENAI_EMBEDDING_DEPLOYMENT')
 
 pwd = os.getcwd()
 logo = f"{pwd}/Images/logo-no-background.svg"
 
 def load_environment():
-    if not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_KEY or not AZURE_OPENAI_MODEL:
+    if not AZURE_OPENAI_KEY or not AZURE_OPENAI_ENDPOINT or not AZURE_OPENAI_MODEL or not AZURE_OPENAI_EMBEDDING_DEPLOYMENT:
         st.error("Azure OpenAI configurations are missing. Please set the required environment variables.")
         st.stop()
 
@@ -41,8 +42,19 @@ local_css("style.css")
 @st.cache_resource
 def initialize_backend():
     pdf_dir, output_dir, embedding_file_path = setup_directories()
-    combined_text = process_pdfs(pdf_dir, output_dir)
-    index, chunks = create_vector_db(combined_text, embedding_file_path)
+    
+    if not os.path.exists(pdf_dir):
+        st.warning(f"PDF directory not found: {pdf_dir}. Initializing with empty data.")
+        combined_text = ""
+    else:
+        combined_text = process_pdfs(pdf_dir, output_dir)
+    
+    if not combined_text:
+        combined_text = "This is a placeholder text for initialization."
+    
+    index, chunks = create_vector_db(combined_text, embedding_file_path, 
+                                     AZURE_OPENAI_KEY, AZURE_OPENAI_ENDPOINT, 
+                                     AZURE_OPENAI_EMBEDDING_DEPLOYMENT)
     crm = BankCRM()
     auth = UserAuth(crm)
     return index, chunks, crm, auth
